@@ -226,9 +226,40 @@ $OutFile = New-UmbrellaSkynetFile -saveLocation $saveLocation -fileName $fileNam
 function Add-SamSite {
     param (
         $iadsName,
-        $samName
+        $sam
     )
-    Add-Content $OutFile "$iadsName`:addSameSite('$samName')"
+
+    $iName = $sam.Value.Unit
+    $content = "$iadsName`:addSameSite('$iName')"
+
+    if ($sam.Value.EngZone -ne "nil") {
+        $x = $sam.Value.EngZone
+        $a = ":setEngagementZone($x)"
+        $content = $content + $a
+    }
+    if ($sam.Value.ConnectionNode -ne "nil") {
+        $cName = $sam.Value.ConnectionNode -replace " ", ""
+        $nName = $sam.Value.ConnectionNode
+        Add-Content $OutFile "$cName = StaticObject.getByName($nName)"
+        $b = ":addConnectionNode($nName)"
+        $content = $content + $b
+
+    }
+    if ($sam.Value.PowerUnit -ne "nil") {
+        $pName = $sam.Value.PowerUnit -replace " ", ""
+        $uName = $sam.Value.PowerUnit
+        Add-Content $OutFile "$pName = StaticObject.getByName($uName)"
+        $c = ":addPowerSource($pName)"
+        $content = $content + $c
+
+    }
+    if ($sam.Value.ActAsEWR -eq 'true') {
+        $d = ":setActAsEW(true)"
+        $content = $content + $d
+    }
+
+
+    Add-Content $OutFile $content
 }
 
-$samObj.psobject.Properties |  ForEach-Object -Process{ Add-SamSite -samName $_.Value.Unit -iadsName $iadsName }
+$samObj.psobject.Properties |  ForEach-Object -Process{ Add-SamSite -sam $_ -iadsName $iadsName }

@@ -14,7 +14,7 @@ RED C2 Tartus Field, CN, GPU
 ( Unit Name, Command Center Group Name, Connection Node, Power Node )
 !EWR
 RED EWR Damascus-2,         RED C2 Damascus Central,    CN, APU
-RED EWR Tha'lah 3,          nil,                        CN, EP
+RED EWR Thalah 3,           nil,                        CN, EP
 RED EWR Bassel Al Assad,    RED C2 Not A Real C2,       CN, nil
 
 
