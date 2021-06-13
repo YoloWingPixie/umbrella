@@ -96,9 +96,11 @@ function New-UmbrellaSkynetFile {
     )
     $preamble = @"
 
-    do
+--Created with Umbrella
 
-    $iadsName = SkynetIADS:create('$iadsName')
+do
+
+$iadsName = SkynetIADS:create('$iadsName')
 
 "@
 
@@ -129,9 +131,22 @@ $pdHash = @{}
 [array]$Name = @()
 
 foreach ($group in $commandCenters) {
-    $Unit = $group.Split(',')[0].Trim()
-    $CN  = $group.Split(',')[1].Trim()
-    $Power = $group.Split(',')[2].Trim()
+    $Unit = $group.Split(',')[0].Split(';')[0].Trim()
+    $UnitType = $group.Split(',')[0].Split(';')[1].Trim()
+    $CN  = $group.Split(',')[1].Split(';')[0].Trim()
+    if ($CN -ne 'nil') {
+        $CNType = $group.Split(',')[1].Split(';')[1].Trim()
+    }
+    else {
+        $CNType = "nil"
+    }
+    $Power = $group.Split(',')[2].Split(';')[0].Trim()
+    if ($Power -ne 'nil') {
+        $PowerType = $group.Split(',')[2].Split(';')[1].Trim()   
+    }
+    else {
+        $PowerType = "nil"
+    }
     $xName = $Unit -replace ' ', ''
     $Name = $Name + $xName
 
@@ -140,8 +155,11 @@ foreach ($group in $commandCenters) {
 
     $Hash = @{
         Unit = $Unit
+        UnitType = $UnitType
         ConnectionNode = $CN
+        ConnectionNodeType = $CNType
         PowerUnit = $Power
+        PowerUnitType = $PowerType
     }
     $cc += [PSCustomObject]$Hash
 }
@@ -156,9 +174,21 @@ $ccObj = [PSCustomObject]$ccHash
 [array]$Name = @()
 foreach ($group in $earlyWarningRadars) {
     $Unit = $group.Split(',')[0].Trim()
-    $UnitCC  = $group.Split(',')[1].Trim()   
-    $CN  = $group.Split(',')[2].Trim()
-    $Power = $group.Split(',')[3].Trim()
+    $UnitCC  = $group.Split(',')[1].Trim()
+    $CN  = $group.Split(',')[2].Split(';')[0].Trim()
+    if ($CN -ne 'nil') {
+        $CNType = $group.Split(',')[2].Split(';')[1].Trim()
+    }
+    else {
+        $CNType = "nil"
+    }
+    $Power = $group.Split(',')[3].Split(';')[0].Trim()
+    if ($Power -ne 'nil') {
+        $PowerType = $group.Split(',')[3].Split(';')[1].Trim()   
+    }
+    else {
+        $PowerType = "nil"
+    }   
     $xName = $Unit -replace ' ', ''
     $xName = $xName -replace "(-|`|#)", ''
     $xName = $xName -replace "'", ''
@@ -171,7 +201,9 @@ foreach ($group in $earlyWarningRadars) {
         Unit = $Unit
         CommandCenter =  $UnitCC
         ConnectionNode = $CN
+        ConnectionNodeType = $CNType
         PowerUnit = $Power
+        PowerUnitType = $PowerType
     }
 
     $ewr += [PSCustomObject]$Hash
@@ -187,9 +219,21 @@ $ewjObj = [PSCustomObject]$ewrHash
 
 foreach ($group in $surfaceAirMissiles) {
     $Unit = $group.Split(',')[0].Trim()
-    $UnitCC  = $group.Split(',')[1].Trim()   
-    $CN  = $group.Split(',')[2].Trim()
-    $Power = $group.Split(',')[3].Trim()
+    $UnitCC  = $group.Split(',')[1].Trim()
+    $CN  = $group.Split(',')[2].Split(';')[0].Trim()
+    if ($CN -ne 'nil') {
+        $CNType = $group.Split(',')[2].Split(';')[1].Trim()
+    }
+    else {
+        $CNType = "nil"
+    }
+    $Power = $group.Split(',')[3].Split(';')[0].Trim()
+    if ($Power -ne 'nil') {
+        $PowerType = $group.Split(',')[3].Split(';')[1].Trim()   
+    }
+    else {
+        $PowerType = "nil"
+    }   
     $ActAsEWR = $group.Split(',')[4].Trim()
     $EngZone = $group.Split(',')[5].Trim()
     $xName = $Unit -replace ' ', ''
@@ -204,7 +248,9 @@ foreach ($group in $surfaceAirMissiles) {
         Unit = $Unit
         CommandCenter =  $UnitCC
         ConnectionNode = $CN
+        ConnectionNodeType = $CNType
         PowerUnit = $Power
+        PowerUnitType = $PowerType
         ActAsEWR = $ActAsEWR
         EngZone = $EngZone
     }
@@ -221,7 +267,15 @@ $samObj = [PSCustomObject]$samHash
 
 $OutFile = New-UmbrellaSkynetFile -saveLocation $saveLocation -fileName $fileName -iadsName $iadsName
 
-
+function Add-CommandCenter {
+    param (
+        $iadsName,
+        $cc
+    )
+    $iName = $cc.Value.Unit
+    $content = "$iadsName`:addCommandCenter()"
+    
+}
 
 function Add-SamSite {
     param (
@@ -230,7 +284,7 @@ function Add-SamSite {
     )
 
     $iName = $sam.Value.Unit
-    $content = "$iadsName`:addSameSite('$iName')"
+    $content = "$iadsName`:addSamSite('$iName')"
 
     if ($sam.Value.EngZone -ne "nil") {
         $x = $sam.Value.EngZone
@@ -240,7 +294,12 @@ function Add-SamSite {
     if ($sam.Value.ConnectionNode -ne "nil") {
         $cName = $sam.Value.ConnectionNode -replace " ", ""
         $nName = $sam.Value.ConnectionNode
-        Add-Content $OutFile "$cName = StaticObject.getByName($nName)"
+        if ($sam.Value.ConnectionNodeType -eq "unit") {
+            Add-Content $OutFile "$cName = Unit.getByName($nName)"
+        }
+        else {
+            Add-Content $OutFile "$cName = StaticObject.getByName($nName)"
+        }
         $b = ":addConnectionNode($nName)"
         $content = $content + $b
 
@@ -248,7 +307,12 @@ function Add-SamSite {
     if ($sam.Value.PowerUnit -ne "nil") {
         $pName = $sam.Value.PowerUnit -replace " ", ""
         $uName = $sam.Value.PowerUnit
-        Add-Content $OutFile "$pName = StaticObject.getByName($uName)"
+        if ($sam.Value.PowerUnitType -eq "unit") {
+            Add-Content $OutFile "$pName = Unit.getByName($uName)"
+        }
+        else {
+            Add-Content $OutFile "$pName = StaticObject.getByName($uName)"
+        }
         $c = ":addPowerSource($pName)"
         $content = $content + $c
 
@@ -262,4 +326,19 @@ function Add-SamSite {
     Add-Content $OutFile $content
 }
 
+Add-Content $OutFile @'
+
+-------- SAMs -------
+
+'@
+
 $samObj.psobject.Properties |  ForEach-Object -Process{ Add-SamSite -sam $_ -iadsName $iadsName }
+
+
+Add-Content $OutFile @"
+
+$iadsName`:setupSAMSitesAndThenActivate()
+
+end
+
+"@

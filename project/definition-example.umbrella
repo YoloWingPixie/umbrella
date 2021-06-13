@@ -1,33 +1,33 @@
 IADS DEFINITION FILE
 Use nil for any unwanted arguments/options 
 
-( Group Name, Connection Node, Power Node )
+( Group Name, Connection Node, Connection Node Type (static|unit), Power Node (static|unit) )
 !COMMAND CENTERS
-RED C2 Damascus Central, CN, APU
-RED C2 Damascus South, CN, nil
-RED C2 Damascus East, CN, EP
-RED C2 Aleppo, nil, GPU
-RED C2 Tartus Field, CN, GPU
+RED C2 Damascus Central;unit,    CN;static,     APU;unit        
+RED C2 Damascus South;static,      CN;nil,        EP;static
+RED C2 Damascus East;unit,       CN;static,     EP;unit
+RED C2 Aleppo;static,              nil,           GPU;static
+RED C2 Tartus Field;unit,        CN;static,     GPU;unit
 
 !END COMMAND
 
-( Unit Name, Command Center Group Name, Connection Node, Power Node )
+( Unit Name, Command Center Group Name, Connection Node, Connection Node Type (static|unit), Power Node (static|unit) )
 !EWR
-RED EWR Damascus-2,         RED C2 Damascus Central,    CN, APU
-RED EWR Thalah 3,           nil,                        CN, EP
-RED EWR Bassel Al Assad,    RED C2 Not A Real C2,       CN, nil
+RED EWR Damascus-2,         RED C2 Damascus Central,    CN;static, APU;unit
+RED EWR Thalah 3,           nil,                        CN;unit,   EP;static
+RED EWR Bassel Al Assad,    RED C2 Not A Real C2,       CN;unit,   nil
 
 
 !END EWR
 
 ( Group Name, Command Center Group Name, Connection Node, Power Node, Act As EWR(bool), Engagement Zone In Percent(int) )
 !SAM
-RED SAM SA2-Damascus,   RED C2 Damascus Central,    CN,     GPU,    false,  90
-RED SAM SA3-Damascus,   RED C2 Damascus Central,    CN,     GPU,    false,  90
-RED SAM SA2-Damascus-2, RED C2 Damascus Central,    CN,     GPU,    true,   85
-RED SAM SA23-Thalah,   RED C2 Damascus South,      nil,    nil,    true,   95
-RED SAM SA17-Tartus,    RED C2 Tartus Field,        CN,     GPU,    false,  70
-REDSAM Aleppo-SA20,     nil,                        nil,    nil,    true,   65
+RED SAM SA2-Damascus,   RED C2 Damascus Central,    CN;static,      GPU;unit,    false,  90
+RED SAM SA3-Damascus,   RED C2 Damascus Central,    CN;unit,        GPU;unit,    false,  90
+RED SAM SA2-Damascus-2, RED C2 Damascus Central,    CN;static,      GPU;unit,    true,   85
+RED SAM SA23-Thalah,   RED C2 Damascus South,       nil,            nil,         true,   95
+RED SAM SA17-Tartus,    RED C2 Tartus Field,        CN;static,      GPU;unit,    false,  70
+REDSAM Aleppo-SA20,     nil,                        nil,            nil,         true,   65
 
 !END SAM
 
