@@ -25,7 +25,7 @@ RED EWR Bassel Al Assad,    RED C2 Not A Real C2,       CN, nil
 RED SAM SA2-Damascus,   RED C2 Damascus Central,    CN,     GPU,    false,  90
 RED SAM SA3-Damascus,   RED C2 Damascus Central,    CN,     GPU,    false,  90
 RED SAM SA2-Damascus-2, RED C2 Damascus Central,    CN,     GPU,    true,   85
-RED SAM SA23-Tha'lah,   RED C2 Damascus South,      nil,    nil,    true,   95
+RED SAM SA23-Thalah,   RED C2 Damascus South,      nil,    nil,    true,   95
 RED SAM SA17-Tartus,    RED C2 Tartus Field,        CN,     GPU,    false,  70
 REDSAM Aleppo-SA20,     nil,                        nil,    nil,    true,   65
 

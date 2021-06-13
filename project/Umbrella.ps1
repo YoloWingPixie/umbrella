@@ -118,37 +118,51 @@ $earlyWarningRadars = Convert-DefinitionContent -DefinitionContent $DefinitionCo
 $surfaceAirMissiles = Convert-DefinitionContent -DefinitionContent $DefinitionContent -type '!SAM'
 $pointDefense = Convert-DefinitionContent -DefinitionContent $DefinitionContent -type '!POINT.DEFENSE'
 
-$cc = [PSCustomObject]@{}
-$ewr = [PSCustomObject]@{}
-$sam = [PSCustomObject]@{}
-$pd = [PSCustomObject]@{}
+$cc = @()
+$ccHash = @{}
+$ewr = @()
+$ewrHash = @{}
+$sam = @()
+$samHash = @{}
+$pd = @()
+$pdHash = @{}
+[array]$Name = @()
 
-foreach ($comCen in $commandCenters) {
-    $comUnit = $comCen.Split(',')[0].Trim()
-    $comCN  = $comCen.Split(',')[1].Trim()
-    $comPower = $comCen.Split(',')[2].Trim()
-    $Name = $comUnit -replace ' ', ''
-    
-    $comCN =    Set-ConnectionNodeName -connectionNode $comCN -connectedUnit $comUnit
-    $comPower = Set-PowerUnitName -powerUnit $comPower -receivingUnit $comUnit
+foreach ($group in $commandCenters) {
+    $Unit = $group.Split(',')[0].Trim()
+    $CN  = $group.Split(',')[1].Trim()
+    $Power = $group.Split(',')[2].Trim()
+    $xName = $Unit -replace ' ', ''
+    $Name = $Name + $xName
 
-    $comHash = @{
-        Unit = $comUnit
-        ConnectionNode = $comCN
-        PowerUnit = $comPower
+    $CN =    Set-ConnectionNodeName -connectionNode $CN -connectedUnit $Unit
+    $Power = Set-PowerUnitName -powerUnit $Power -receivingUnit $Unit
+
+    $Hash = @{
+        Unit = $Unit
+        ConnectionNode = $CN
+        PowerUnit = $Power
     }
-    $comObj = [PSCustomObject]$comHash
-    $cc | Add-Member -NotePropertyName $Name -NotePropertyValue $comObj
+    $cc += [PSCustomObject]$Hash
+}
+Write-Host $Name
+
+for ($i = 0; $i -lt $cc.Count; $i++) {
+    $ccHash.($Name[$i]) = $cc[$i]
 }
 
+$ccObj = [PSCustomObject]$ccHash
+
+[array]$Name = @()
 foreach ($group in $earlyWarningRadars) {
     $Unit = $group.Split(',')[0].Trim()
     $UnitCC  = $group.Split(',')[1].Trim()   
     $CN  = $group.Split(',')[2].Trim()
     $Power = $group.Split(',')[3].Trim()
-    $Name = $Unit -replace ' ', ''
-    $Name = $Name -replace "(-|`|#)", ''
-    $Name = $Name -replace "'", ''
+    $xName = $Unit -replace ' ', ''
+    $xName = $xName -replace "(-|`|#)", ''
+    $xName = $xName -replace "'", ''
+    $Name = $Name + $xName
     
     $CN =    Set-ConnectionNodeName -connectionNode $CN -connectedUnit $Unit
     $Power = Set-PowerUnitName -powerUnit $Power -receivingUnit $Unit
@@ -159,9 +173,17 @@ foreach ($group in $earlyWarningRadars) {
         ConnectionNode = $CN
         PowerUnit = $Power
     }
-    $Obj = [PSCustomObject]$Hash
-    $ewr | Add-Member -NotePropertyName $Name -NotePropertyValue $Obj
+
+    $ewr += [PSCustomObject]$Hash
 }
+
+for ($i = 0; $i -lt $ewr.Count; $i++) {
+    $ewrHash.($Name[$i]) = $ewr[$i]
+}
+
+$ewjObj = [PSCustomObject]$ewrHash
+
+[array]$Name = @()
 
 foreach ($group in $surfaceAirMissiles) {
     $Unit = $group.Split(',')[0].Trim()
@@ -170,9 +192,10 @@ foreach ($group in $surfaceAirMissiles) {
     $Power = $group.Split(',')[3].Trim()
     $ActAsEWR = $group.Split(',')[4].Trim()
     $EngZone = $group.Split(',')[5].Trim()
-    $Name = $Unit -replace ' ', ''
-    $Name = $Name -replace "(-|`|#)", ''
-    $Name = $Name -replace "'", ''
+    $xName = $Unit -replace ' ', ''
+    $xName = $xName -replace "(-|`|#)", ''
+    $xName = $xName -replace "'", ''
+    $Name = $Name + $xName
     
     $CN =    Set-ConnectionNodeName -connectionNode $CN -connectedUnit $Unit
     $Power = Set-PowerUnitName -powerUnit $Power -receivingUnit $Unit
@@ -185,9 +208,15 @@ foreach ($group in $surfaceAirMissiles) {
         ActAsEWR = $ActAsEWR
         EngZone = $EngZone
     }
-    $Obj = [PSCustomObject]$Hash
-    $sam | Add-Member -NotePropertyName $Name -NotePropertyValue $Obj
+
+    $sam += [PSCustomObject]$Hash
 }
+
+for ($i = 0; $i -lt $sam.Count; $i++) {
+    $samHash.($Name[$i]) = $sam[$i]
+}
+
+$samObj = [PSCustomObject]$samHash
 
 
 $OutFile = New-UmbrellaSkynetFile -saveLocation $saveLocation -fileName $fileName -iadsName $iadsName
@@ -202,3 +231,4 @@ function Add-SamSite {
     Add-Content $OutFile "$iadsName`:addSameSite('$samName')"
 }
 
+$samObj.psobject.Properties |  ForEach-Object -Process{ Add-SamSite -samName $_.Value.Unit -iadsName $iadsName }
