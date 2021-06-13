@@ -1,0 +1,46 @@
+#IADS DEFINITION FILE
+#Use nil for any unwanted arguments/options 
+
+( Group Name, Connection Node, Power Node )
+!COMMAND CENTERS 
+
+
+
+!END COMMAND
+
+EWR ( Unit Name, Command Center Group Name, Connection Node, Power Node )
+
+
+
+END EWR
+
+SAM ( Group Name, Command Center Group Name, Connection Node, Power Node, Act As EWR(bool), Engagement Zone In Percent(int) )
+
+
+
+END SAM
+
+POINT DEFENSE (Group Name, Defended SAM Group Name, Connection Node, Power Node )
+
+
+
+END PD
+
+OPTIONS
+
+{RadioMenu = false}
+{UpdateInterval = false}
+{WarmUpTime = false}
+{PDHarmDetectionChance = 75}
+
+END OPTIONS
+
+DEBUG
+{iadsDebug.addedEWRadar = true}
+{iadsDebug.addedSAMSite = true}
+{iadsDebug.warnings = true}
+{iadsDebug.radarWentLive = true}
+{iadsDebug.radarWentDark = true}
+{iadsDebug.harmDefence = true}
+
+END DEBUG

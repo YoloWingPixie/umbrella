@@ -1,0 +1,58 @@
+IADS DEFINITION FILE
+Use nil for any unwanted arguments/options 
+
+( Group Name, Connection Node, Power Node )
+!COMMAND CENTERS
+RED C2 Damascus Central, CN, APU
+RED C2 Damascus South, CN, nil
+RED C2 Damascus East, CN, EP
+RED C2 Aleppo, nil, GPU
+RED C2 Tartus Field, CN, GPU
+
+!END COMMAND
+
+( Unit Name, Command Center Group Name, Connection Node, Power Node )
+!EWR
+RED EWR Damascus-2,         RED C2 Damascus Central,    CN, APU
+RED EWR Tha'lah 3,          nil,                        CN, EP
+RED EWR Bassel Al Assad,    RED C2 Not A Real C2,       CN, nil
+
+
+!END EWR
+
+( Group Name, Command Center Group Name, Connection Node, Power Node, Act As EWR(bool), Engagement Zone In Percent(int) )
+!SAM
+RED SAM SA2-Damascus,   RED C2 Damascus Central,    CN,     GPU,    false,  90
+RED SAM SA3-Damascus,   RED C2 Damascus Central,    CN,     GPU,    false,  90
+RED SAM SA2-Damascus-2, RED C2 Damascus Central,    CN,     GPU,    true,   85
+RED SAM SA23-Tha'lah,   RED C2 Damascus South,      nil,    nil,    true,   95
+RED SAM SA17-Tartus,    RED C2 Tartus Field,        CN,     GPU,    false,  70
+REDSAM Aleppo-SA20,     nil,                        nil,    nil,    true,   65
+
+!END SAM
+
+(Group Name, Defended SAM Group Name, Connection Node, Power Node )
+!POINT DEFENSE 
+
+
+
+!END PD
+
+!OPTIONS
+
+RadioMenu = false
+UpdateInterval = false
+WarmUpTime = false
+PDHarmDetectionChance = 75
+
+!END OPTIONS
+
+DEBUG
+iadsDebug.addedEWRadar = true
+iadsDebug.addedSAMSite = true
+iadsDebug.warnings = true
+iadsDebug.radarWentLive = true
+iadsDebug.radarWentDark = true
+iadsDebug.harmDefence = true
+
+END DEBUG
