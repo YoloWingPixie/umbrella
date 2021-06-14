@@ -2,6 +2,42 @@ $iadsName = "redIADS"
 $saveLocation = "C:\dev"
 $fileName = "iads"
 
+
+function Create-SkynetVariable {
+    [CmdletBinding()]
+    param (
+        [string]$variableName,
+
+        [Parameter(Mandatory=$true)]
+        [Alias("UnitName", "Unit")]
+        [string]$unitName,
+
+        [Parameter(Mandatory=$true)]
+        [Alias("UnitType")]
+        [ValidateSet("Unit", "Static")]
+        [string]$unitType,
+
+        [Parameter(Mandatory=$true)]
+        [Alias("Type")]
+        [ValidateSet("ConnectionNode", "PowerUnit", "CommandCenter", "SAM", "EWR" )]
+        [string]$variableType
+    )  
+    begin {
+        if (condition) {
+            
+        }
+    }
+    
+    process {
+        
+    }
+    
+    end {
+        
+    }
+}
+    
+
 #Set the name of the power unit to the name of recieving unit + "-APU" or other accepted tag, UNLESS a specific name was given.
 function Set-PowerUnitName {
     param (
@@ -315,8 +351,43 @@ function Add-CommandCenter {
         $iadsName,
         $cc
     )
+
+    #The declared name in the ME for the command center unit
     $iName = $cc.Value.Unit
     $content = "$iadsName`:addCommandCenter()"
+
+    #A variable friendly version of iName with no spaces
+    $cName = $cc.Value.Unit -replace " ", ""
+
+    #Declares the command center unit as a variable, with respect to if it is a unit or static object in the ME.
+    if ($cc.Value.UnitType -eq "Unit") {
+        Add-Content $OutFile "$cName = Unit.getByName('$iName')"      
+    }
+    else {
+        Add-Content $OutFile  "$cName = StaticObject.getByName('$iName')"
+    }
+
+    if ($cc.Value.ConnectionNode -ne 'nil') {
+
+        #Unit name as declared by ME
+        $cName = $cc.Value.ConnectionNode
+
+        #A variable friendly version of nName with no spaces
+        $nName = $cc.Value.ConnectionNode -replace " ",""
+
+        #Declares the connection node unit as a variable, with respect to if it is a unit or static object in the ME.
+        if ($cc.Value.ConnectionNodeType -eq 'unit') {
+            Add-Content $OutFile "$cName = Unit.getByName('$nName')"
+        }
+        else {
+            Add-Content $OutFile "$cName = StaticObject.getByName('$nName')"
+        }
+
+        $a = ":addConnectionNode($nName)"
+    }
+
+
+
     
 }
 
@@ -330,7 +401,7 @@ function Add-SamSite {
         $sam
     )
 
-    #iName is the literal unit name
+    #The declared name in the ME for the sam group/unit
     $iName = $sam.Value.Unit
     
     #content is the variable that actually gets written to the Skynet file for each SAM site. It starts with a simple add
