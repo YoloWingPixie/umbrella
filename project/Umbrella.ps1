@@ -42,6 +42,7 @@ function Add-SupportUnits {
         if ($psObject.Value.PowerUnit -ne "nil") {
 
             $pName = $psObject.Value.PowerUnit -replace " ", ""
+            $pName = $cName -replace "-", ""
             $uName = $psObject.Value.PowerUnit
 
             if ($psObject.Value.PowerUnitType -eq "unit") {
