@@ -2,40 +2,154 @@ $iadsName = "redIADS"
 $saveLocation = "C:\dev"
 $fileName = "iads"
 
-
-function Create-SkynetVariable {
+#Function to add a Connection Node or Power unity to a Skynet Variable. Intended to be used within Create-SkynetVariable and accept PSObjects
+function Add-SupportUnits {
     [CmdletBinding()]
     param (
-        [string]$variableName,
-
         [Parameter(Mandatory=$true)]
-        [Alias("UnitName", "Unit")]
-        [string]$unitName,
+        $psObject,
 
-        [Parameter(Mandatory=$true)]
-        [Alias("UnitType")]
-        [ValidateSet("Unit", "Static")]
-        [string]$unitType,
-
-        [Parameter(Mandatory=$true)]
-        [Alias("Type")]
-        [ValidateSet("ConnectionNode", "PowerUnit", "CommandCenter", "SAM", "EWR" )]
-        [string]$variableType
-    )  
+        $OutFile = $OutFile
+    )
+    
     begin {
-        if (condition) {
-            
-        }
+        $contentAddCN = ""
+        $contentAddGpu = ""
     }
     
     process {
-        
+
+        if ($psObject.Value.ConnectionNode -ne "nil") {
+
+            #cName is a no-space version of the name for the declared lua variable
+            $cName = $psObject.Value.ConnectionNode -replace " ", ""
+
+            #nName is the literal unit name in ME
+            $nName = $psObject.Value.ConnectionNode
+
+            #if the connection node is a unit, add it ias a unit, else add it as a static object.
+            if ($psObject.Value.ConnectionNodeType -eq "unit") {
+                Add-Content $OutFile "$cName = Unit.getByName('$nName')"    
+            }
+            else {
+                Add-Content $OutFile "$cName = StaticObject.getByName('$nName')"
+            }
+
+            $contentAddCN = ":addConnectionNode($cName)"
+
+        }
+        if ($psObject.Value.PowerUnit -ne "nil") {
+
+            $pName = $psObject.Value.PowerUnit -replace " ", ""
+            $uName = $psObject.Value.PowerUnit
+
+            if ($psObject.Value.PowerUnitType -eq "unit") {
+                Add-Content $OutFile "$pName = Unit.getByName('$uName')"        
+            }
+            else {
+                Add-Content $OutFile "$pName = StaticObject.getByName('$uName')"
+            }
+            $contentAddGpu = ":addPowerSource($pName)"
+        }       
     }
     
     end {
-        
+        return $contentAddGpu, $contentAddCN
     }
 }
+function Add-SkynetVariable {
+    [CmdletBinding()]
+    param (
+
+        [Parameter(Mandatory=$true)]
+        $psObject,
+
+        [Parameter(Mandatory=$true)]
+        [Alias("Type")]
+        [ValidateSet("CommandCenter", "SAM", "EWR", "PointDefense" )]
+        [string]$variableType,
+
+        [Parameter(Mandatory=$true)]
+        [string]$iadsName = $iadsName,
+
+        [Parameter(Mandatory=$true)]
+        [Alias("OutputFile")]
+        $OutFile = $OutFile
+    )  
+    begin {
+
+                $variableName = $psObject.Value.Unit -replace " ", ""
+                $unitName = $psObject.Value.Unit
+                $unitType = $psObject.Value.UnitType
+    
+        }
+        process {
+            $content = "--"
+
+            switch ($variableType) {
+                CommandCenter {
+                    $content = "$iadsName`:addCommandCenter($variableName)"
+
+                    if ($psObject.Value.UnitType -eq "Unit") {
+                        Add-Content $OutFile "$variableName = Unit.getByName('$unitName')"      
+                    }
+                    else {
+                        Add-Content $OutFile  "$variableName = StaticObject.getByName('$unitName')"
+                    }
+
+                }
+
+                SAM {
+                    $content = "$iadsName`:addSamSite($variableName)"
+
+                    if ($psObject.Value.EngZone -ne "nil") {
+                        $x = $psObject.Value.EngZone
+                        $a = ":setEngagementZone($x)"
+                        $content = $content + $a
+                    }
+
+                    if ($psObject.Value.ActAsEWR -eq 'true') {
+                        $d = ":setActAsEW(true)"
+                        $content = $content + $d
+                    }
+
+                }
+
+                EWR {
+                    $content = "$iadsName`:addEarlyWarningRadar($variableName)"
+
+                    if ($psObject.Value.UnitType -eq "Unit") {
+                        Add-Content $OutFile "$variableName = Unit.getByName('$unitName')"      
+                    }
+                    else {
+                        Add-Content $OutFile  "$variableName = StaticObject.getByName('$unitName')"
+                    }
+
+                }
+
+                PointDefense {
+                    $protectedUnit = $psObject.Value.ProtectedUnit
+
+                    Add-Content $OutFile @"
+
+                    -- Point Defense for $protectedUnit
+                    $variableName = redIADS:getSAMSiteByGroupName('$UnitName')
+                    $iadsName`:getSAMSiteByGroupName('$protectedUnit'):addPointDefence($variableName)
+"@
+                }
+
+
+                Default {}
+            }
+
+            $contentAddGpu, $contentAddCN = Add-SupportUnits -PSObject $psObject
+            $content = $content+$contentAddGpu+$contentAddCN
+        
+        }      
+        end {
+            Add-Content $OutFile $content
+        }
+    }
     
 
 #Set the name of the power unit to the name of recieving unit + "-APU" or other accepted tag, UNLESS a specific name was given.
@@ -291,7 +405,7 @@ for ($i = 0; $i -lt $ewr.Count; $i++) {
     $ewrHash.($Name[$i]) = $ewr[$i]
 }
 
-$ewjObj = [PSCustomObject]$ewrHash
+$ewrObj = [PSCustomObject]$ewrHash
 
 [array]$Name = @()
 
@@ -345,131 +459,36 @@ $samObj = [PSCustomObject]$samHash
 #Make the Skynet lua file
 $OutFile = New-UmbrellaSkynetFile -saveLocation $saveLocation -fileName $fileName -iadsName $iadsName
 
-#WIP function
-function Add-CommandCenter {
-    param (
-        $iadsName,
-        $cc
-    )
+## Now we start adding units to the actual lua output file by iterating through the subobjects of each parent type object and invoking Add-SkynetVariable
+#Command Centers
 
-    #The declared name in the ME for the command center unit
-    $iName = $cc.Value.Unit
-    $content = "$iadsName`:addCommandCenter()"
+Add-Content $OutFile @'
 
-    #A variable friendly version of iName with no spaces
-    $cName = $cc.Value.Unit -replace " ", ""
+-------- Command Centers -------
 
-    #Declares the command center unit as a variable, with respect to if it is a unit or static object in the ME.
-    if ($cc.Value.UnitType -eq "Unit") {
-        Add-Content $OutFile "$cName = Unit.getByName('$iName')"      
-    }
-    else {
-        Add-Content $OutFile  "$cName = StaticObject.getByName('$iName')"
-    }
+'@
 
-    if ($cc.Value.ConnectionNode -ne 'nil') {
-
-        #Unit name as declared by ME
-        $cName = $cc.Value.ConnectionNode
-
-        #A variable friendly version of nName with no spaces
-        $nName = $cc.Value.ConnectionNode -replace " ",""
-
-        #Declares the connection node unit as a variable, with respect to if it is a unit or static object in the ME.
-        if ($cc.Value.ConnectionNodeType -eq 'unit') {
-            Add-Content $OutFile "$cName = Unit.getByName('$nName')"
-        }
-        else {
-            Add-Content $OutFile "$cName = StaticObject.getByName('$nName')"
-        }
-
-        $a = ":addConnectionNode($nName)"
-    }
+$ccObj.psobject.Properties | ForEach-Object -Process{ Add-SkynetVariable -PSObject $_ -Type "CommandCenter" -IADSName $iadsName -OutputFile $OutFile }
 
 
-
-    
-}
-
-#Function to generate SAM site entries in the lua file
-function Add-SamSite {
-    param (
-        $iadsName,
-
-        # As seen later, we're passing $samObj.psobject.Properties |  ForEach-Object to this function so $sam should pretty much always
-        # $_
-        $sam
-    )
-
-    #The declared name in the ME for the sam group/unit
-    $iName = $sam.Value.Unit
-    
-    #content is the variable that actually gets written to the Skynet file for each SAM site. It starts with a simple add
-    #and as options are added from loops, these get appended.
-    $content = "$iadsName`:addSamSite('$iName')"
-
-    #Add the engagement zone
-    if ($sam.Value.EngZone -ne "nil") {
-        $x = $sam.Value.EngZone
-        $a = ":setEngagementZone($x)"
-        $content = $content + $a
-    }
-
-    #Add the connection node
-    if ($sam.Value.ConnectionNode -ne "nil") {
-
-        #cName is a no-space version of the name for the declared lua variable
-        $cName = $sam.Value.ConnectionNode -replace " ", ""
-
-        #nName is the literal unit name in ME
-        $nName = $sam.Value.ConnectionNode
-
-        #if the connection node is a unit, add it ias a unit, else add it as a static object.
-        if ($sam.Value.ConnectionNodeType -eq "unit") {
-            Add-Content $OutFile "$cName = Unit.getByName($nName)"
-        }
-        else {
-            Add-Content $OutFile "$cName = StaticObject.getByName($nName)"
-        }
-        $b = ":addConnectionNode($nName)"
-        $content = $content + $b
-
-    }
-
-    #Add the power source. Perform the same steps as above.
-    if ($sam.Value.PowerUnit -ne "nil") {
-        $pName = $sam.Value.PowerUnit -replace " ", ""
-        $uName = $sam.Value.PowerUnit
-        if ($sam.Value.PowerUnitType -eq "unit") {
-            Add-Content $OutFile "$pName = Unit.getByName($uName)"
-        }
-        else {
-            Add-Content $OutFile "$pName = StaticObject.getByName($uName)"
-        }
-        $c = ":addPowerSource($pName)"
-        $content = $content + $c
-
-    }
-
-    #If the SAM should act as an EWR, add that to the content
-    if ($sam.Value.ActAsEWR -eq 'true') {
-        $d = ":setActAsEW(true)"
-        $content = $content + $d
-    }
-
-    #Write the result of $content of this loop, to the lua file.
-    Add-Content $OutFile $content
-}
-
+#SAMs
 Add-Content $OutFile @'
 
 -------- SAMs -------
 
 '@
 
+$samObj.psobject.Properties |  ForEach-Object -Process{ Add-SkynetVariable -PSObject $_ -Type "SAM" -IADSName $iadsName -OutputFile $OutFile }
 
-#Invoke Add-SamSite for all subobjects of the sam parent object.
-$samObj.psobject.Properties |  ForEach-Object -Process{ Add-SamSite -sam $_ -iadsName $iadsName }
+#EWRs
+
+Add-Content $OutFile @'
+
+-------- EWRs -------
+
+'@
+
+$ewrObj.psobject.Properties |  ForEach-Object -Process{ Add-SkynetVariable -PSObject $_ -Type "EWR" -IADSName $iadsName -OutputFile $OutFile }
 
 
 # Activate IADS and end file
