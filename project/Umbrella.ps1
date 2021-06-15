@@ -23,6 +23,7 @@ function Add-SupportUnits {
 
             #cName is a no-space version of the name for the declared lua variable
             $cName = $psObject.Value.ConnectionNode -replace " ", ""
+            $cName = $cName -replace "-", ""
 
             #nName is the literal unit name in ME
             $nName = $psObject.Value.ConnectionNode
@@ -79,6 +80,7 @@ function Add-SkynetVariable {
     begin {
 
                 $variableName = $psObject.Value.Unit -replace " ", ""
+                $variableName = $variableName -replace "-", ""
                 $unitName = $psObject.Value.Unit
                 $unitType = $psObject.Value.UnitType
     
