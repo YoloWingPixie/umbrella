@@ -1,46 +1,56 @@
-#IADS DEFINITION FILE
-#Use nil for any unwanted arguments/options 
+IADS DEFINITION FILE
+Rules for this file:
 
-( Group Name, Connection Node, Power Node )
-!COMMAND CENTERS 
+1. Use "nil" for any properties not wanted, such as connection nodes or power nodes.
+2. Never type anything except units between sets of ! and !END
+3. Don't forget to declare if Command Centers, Power Nodes, or Connection Nodes are static objects or units by appending ;unit or ;static respectively.
+4. Unit names should never include ' or " or ` as these will make both the importer and LUA angry.
 
-
+Syntax Command: ( Group Name, Connection Node, Connection Node Type (static|unit), Power Node (static|unit) )
+!COMMAND CENTERS
+Example CC Delete;unit,    CN;static,     APU;unit        
 
 !END COMMAND
 
-EWR ( Unit Name, Command Center Group Name, Connection Node, Power Node )
+Syntax EWR: ( Unit Name, Command Center Group Name, Connection Node, Connection Node Type (static|unit), Power Node (static|unit) )
+!EWR
+Example EWR Delete,         Example C2,    CN;static, APU;unit
+
+!END EWR
 
 
+Syntax SAM: ( Group Name, Command Center Group Name, Connection Node, Power Node, Act As EWR(bool), Engagement Zone In Percent(int) )
+!SAM
+Example SAM Delete,   Example C2,    nil,      GPU;unit,    false,  90
 
-END EWR
-
-SAM ( Group Name, Command Center Group Name, Connection Node, Power Node, Act As EWR(bool), Engagement Zone In Percent(int) )
-
-
-
-END SAM
-
-POINT DEFENSE (Group Name, Defended SAM Group Name, Connection Node, Power Node )
+!END SAM
 
 
+Syntax Point Defense: (Group Name, Defended SAM Group Name, Connection Node, Power Node )
+!POINT DEFENSE 
+Example PD Delete, Example SAM Delete, CN;unit, APU;static
 
-END PD
 
-OPTIONS
+!END PD
 
-{RadioMenu = false}
-{UpdateInterval = false}
-{WarmUpTime = false}
-{PDHarmDetectionChance = 75}
+!OPTIONS
 
-END OPTIONS
+IADSName = redIADS
+FileName = iads.lua
+OutputPath = C:\dev
+RadioMenu = false
+UpdateInterval = false
+WarmUpTime = false
+PDHarmDetectionChance = 75
+
+!END OPTIONS
 
 DEBUG
-{iadsDebug.addedEWRadar = true}
-{iadsDebug.addedSAMSite = true}
-{iadsDebug.warnings = true}
-{iadsDebug.radarWentLive = true}
-{iadsDebug.radarWentDark = true}
-{iadsDebug.harmDefence = true}
+iadsDebug.addedEWRadar = true
+iadsDebug.addedSAMSite = true
+iadsDebug.warnings = true
+iadsDebug.radarWentLive = true
+iadsDebug.radarWentDark = true
+iadsDebug.harmDefence = true
 
 END DEBUG

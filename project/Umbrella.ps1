@@ -1,7 +1,3 @@
-$iadsName = "redIADS"
-$saveLocation = "C:\dev"
-$fileName = "iads"
-
 #Function to add a Connection Node or Power unity to a Skynet Variable. Intended to be used within Create-SkynetVariable and accept PSObjects
 function Add-SupportUnits {
     [CmdletBinding()]
@@ -284,6 +280,22 @@ $commandCenters = Convert-DefinitionContent -DefinitionContent $DefinitionConten
 $earlyWarningRadars = Convert-DefinitionContent -DefinitionContent $DefinitionContent -type '!EWR'
 $surfaceAirMissiles = Convert-DefinitionContent -DefinitionContent $DefinitionContent -type '!SAM'
 $pointDefense = Convert-DefinitionContent -DefinitionContent $DefinitionContent -type '!POINT.DEFENSE'
+$optionsImport = Convert-DefinitionContent -DefinitionContent $DefinitionContent -type '!OPTIONS'
+
+#Let's import some options now. In case not obvious, do not randomly add options.
+$options = @{
+    IADSName                = $optionsImport[0].Split("=")[1].Trim()
+    FileName                = $optionsImport[1].Split("=")[1].Trim()
+    OutputPath              = $optionsImport[2].Split("=")[1].Trim()
+    RadioMenu               = $optionsImport[3].Split("=")[1].Trim()
+    UpdateInterval          = $optionsImport[4].Split("=")[1].Trim()
+    WarmUpTime              = $optionsImport[5].Split("=")[1].Trim()
+    PDHarmDetectionChance   = $optionsImport[6].Split("=")[1].Trim()
+}
+
+$iadsName = $options['IADSName']
+$saveLocation = $options['OutputPath']
+$fileName = $options['FileName']
 
 <# 
 Create an array and hash table for each type of unit, plus a Name array.

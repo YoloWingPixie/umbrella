@@ -1,7 +1,11 @@
 IADS DEFINITION FILE
-Use nil for any unwanted arguments/options 
+Rules for this file:
 
-( Group Name, Connection Node, Connection Node Type (static|unit), Power Node (static|unit) )
+1. Use "nil" for any properties not wanted, such as connection nodes or power nodes.
+2. Never type anything except units between sets of ! and !END
+3. Don't forget to declare if Command Centers, Power Nodes, or Connection Nodes are static objects or units by appending ;unit or ;static respectively.
+
+Syntax Command: ( Group Name, Connection Node, Connection Node Type (static|unit), Power Node (static|unit) )
 !COMMAND CENTERS
 RED C2 Damascus Central;unit,    CN;static,     APU;unit        
 RED C2 Damascus South;static,      CN;nil,        EP;static
@@ -11,7 +15,7 @@ RED C2 Tartus Field;unit,        CN;static,     GPU;unit
 
 !END COMMAND
 
-( Unit Name, Command Center Group Name, Connection Node, Connection Node Type (static|unit), Power Node (static|unit) )
+Syntax EWR: ( Unit Name, Command Center Group Name, Connection Node, Connection Node Type (static|unit), Power Node (static|unit) )
 !EWR
 RED EWR Damascus-2,         RED C2 Damascus Central,    CN;static, APU;unit
 RED EWR Thalah 3,           nil,                        CN;unit,   EP;static
@@ -20,7 +24,8 @@ RED EWR Bassel Al Assad,    RED C2 Not A Real C2,       CN;unit,   nil
 
 !END EWR
 
-( Group Name, Command Center Group Name, Connection Node, Power Node, Act As EWR(bool), Engagement Zone In Percent(int) )
+
+Syntax SAM: ( Group Name, Command Center Group Name, Connection Node, Power Node, Act As EWR(bool), Engagement Zone In Percent(int) )
 !SAM
 RED SAM SA2-Damascus,   RED C2 Damascus Central,    CN;static,      GPU;unit,    false,  90
 RED SAM SA3-Damascus,   RED C2 Damascus Central,    CN;unit,        GPU;unit,    false,  90
@@ -31,7 +36,8 @@ REDSAM Aleppo-SA20,     nil,                        nil,            nil,        
 
 !END SAM
 
-(Group Name, Defended SAM Group Name, Connection Node, Power Node )
+
+Syntax Point Defense: (Group Name, Defended SAM Group Name, Connection Node, Power Node )
 !POINT DEFENSE 
 
 
@@ -40,6 +46,9 @@ REDSAM Aleppo-SA20,     nil,                        nil,            nil,        
 
 !OPTIONS
 
+IADSName = redIADS
+FileName = iads.lua
+OutputPath = C:\dev
 RadioMenu = false
 UpdateInterval = false
 WarmUpTime = false
